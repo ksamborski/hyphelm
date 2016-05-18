@@ -1,0 +1,40 @@
+{
+  "name": "hypelm-test_data",
+  "description": "Fetching syllabified words from wordlist.eu",
+  "version": "0.1.0",
+  "homepage": "https://github.com/ksamborski/hyphelm",
+  "author": {
+    "name": "Karol Samborski",
+    "email": "edv.karol@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ksamborski/hyphelm"
+  },
+  "bugs": {
+    "url": "https://github.com/ksamborski/hyphelm/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/ksamborski/hyphelm/blob/master/LICENSE"
+    }
+  ],
+  "main": "hypelm-test_data",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {
+  },
+  "devDependencies": {
+    "grunt-contrib-jshint": "~0.6.4",
+    "grunt-contrib-nodeunit": "~0.2.0",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt": "~0.4.5",
+    "co": ">= 4.6.0",
+    "node-fetch": ">= 1.5.2",
+    "jquery": ">=2.1",
+    "jsdom": "~3.1.2"
+  },
+  "keywords": []
+}
