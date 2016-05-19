@@ -10,67 +10,43 @@
 
 var co = require('co');
 var fetch = require('node-fetch');
-var env = require('jsdom').env;
+var cheerio = require('cheerio');
 
 function* wordlist_info(url, word) {
   var res = yield fetch(url);
   var html = yield res.text();
+  
+  var $ = cheerio.load(html);
 
-  return yield (new Promise(function (resolve, reject) {
-    env(html, function (errors, window) {
-      if (errors) {
-        throw errors;
-      }
+  var syllabes = $("div.content > ul.info > li:contains('Typograficzny podział na sylaby: ')");
 
-      var $ = require('jquery')(window);
-
-      var syllabes = $("div.content > ul.info > li:contains('Typograficzny podział na sylaby: ')");
-      if (syllabes.length > 0) {
-        resolve({name: word, syllabes: syllabes.find('b').text().split('-')});
-      } else {
-        resolve({});
-      }
-
-      html = null;
-      window = null;
-      $ = null;
-    });
-  }));
+  if (syllabes.length > 0) {
+    return {name: word, syllabes: syllabes.find('b').text().split('-')};
+  } else {
+    return {};
+  }
 }
 
 function* wordlist(url) {
   var res = yield fetch(url);
   var html = yield res.text();
 
-  return yield (new Promise(function (resolve, reject) {
-    env(html, function (errors, window) {
-      if (errors) {
-        throw errors;
-      }
+  var $ = cheerio.load(html);
+  var words = [];
 
-      var $ = require('jquery')(window);
-      var words = [];
+  $("div.content > ul.list > li").each(function(i,el) {
+    var $el = $(el);
+    words.push({url: $el.find('a').attr("href"), word: $el.text()});
+  });
 
-      $("div.content > ul.list > li").each(function(i,el) {
-        var $el = $(el);
-        words.push({url: $el.find('a').attr("href"), word: $el.text()});
-      });
+  var next_page = $("span.p_next > a");
 
-      var next_page = $("span.p_next > a");
-      if (next_page) {
-        resolve({next: next_page.attr("href"), words: words});
-        html = null;
-        window = null;
-        $ = null;
-        return;
-      }
+  if (next_page) {
+    return {next: next_page.attr("href"), words: words};
+  } else {
+    return {words: words};
+  }
 
-      html = null;
-      window = null;
-      $ = null;
-      resolve({words: words});
-    });
-  }));
 }
 
 var letters = [
@@ -81,21 +57,27 @@ var letters = [
 
 co(function *() {
   var words = {};
-  for (var idx in letters) {
-    var letter = letters[idx];
-    var page_words = {next: 'http://wordlist.eu/slowa/na-litere,' + letter + '/'};
+  var idx = process.argv[2];
+  var letter = letters[idx];
+  
+  if (!letter) {
+    console.log('You have to provide index >= 0 && < 29');
+    return;
+  }
 
-    while (!!page_words.next) {
-      page_words = yield wordlist(page_words.next);
-      for (var w = 0; w < page_words.words.length; w++) {
-        var word = page_words.words[w];
-        var info = yield wordlist_info(word.url, word.word);
+  var page_words = {next: 'http://wordlist.eu/slowa/na-litere,' + letter + '/'};
 
-        if (info.name) {
-          words[info.name] = info.syllabes;
-        }
+  while (!!page_words.next) {
+    page_words = yield wordlist(page_words.next);
+    for (var w = 0; w < page_words.words.length; w++) {
+      var word = page_words.words[w];
+      var info = yield wordlist_info(word.url, word.word);
+
+      if (info.name) {
+        words[info.name] = info.syllabes;
       }
     }
   }
+  
   console.log(JSON.stringify(words));
 });
