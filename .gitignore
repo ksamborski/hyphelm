@@ -7,3 +7,5 @@ node_modules
 *.swp
 *.*~
 test_data/data.json
+test/index.html
+test/elm-stuff
