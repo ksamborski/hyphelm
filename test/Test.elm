@@ -12,6 +12,7 @@ tests : Test
 tests = 
     suite "WordList tests"
         <| List.map (\(k,v) -> test k (assertEqual v (syllabize k))) testData
+        -- [test "abadański" (assertEqual ["a","ba","dań","ski"] (syllabize "abadański"))]
 
 main : Program Never
 main = 
