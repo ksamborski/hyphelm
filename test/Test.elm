@@ -1,18 +1,17 @@
 module Main exposing (main)
 
 import String
+import List
+
+import TestData exposing (testData)
+import Hyphelm exposing (syllabize)
 
 import ElmTest exposing (..)
 
-
 tests : Test
 tests = 
-    suite "A Test Suite"
-        [ test "Addition" (assertEqual (3 + 7) 10)
-        , test "String.left" (assertEqual "a" (String.left 1 "abcdefg"))
-        , test "This test should fail" (assert False)
-        ]
-
+    suite "WordList tests"
+        <| List.map (\(k,v) -> test k (assertEqual v (syllabize k))) testData
 
 main : Program Never
 main = 
