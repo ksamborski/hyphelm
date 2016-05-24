@@ -2,11 +2,20 @@ module Hyphelm exposing (syllabize)
 
 import String
 import List
+import List.Extra as List
 import Set
+
+import Debug
 
 type Phone
   = Vowel String
   | Consonant String
+
+phoneIsC : Phone -> Bool
+phoneIsC ph =
+  case ph of
+    Vowel _ -> False
+    _ -> True
 
 mergePhones : List Phone -> Phone
 mergePhones phs =
@@ -41,7 +50,7 @@ unpronounceableMass =
   , "gc", "rn", "wd", "rf", "rp", "km"
   , "mp", "rch", "gf", "lk", "lh", "lg"
   , "lm", "żk", "mk", "lc", "dg", "rm"
-  , "lch", "mb", "ndz", "dcz", "rcz"
+  , "lch", "mb", "ndz", "dc", "dcz", "rcz"
   , "jz", "lt", "lz", "dzk", "ns", "szcz"
   , "szk", "wc", "rt", "rw", "lp", "ts"
   , "łcz", "mr", "ng", "rg", "nh", "mf"
@@ -53,14 +62,44 @@ unpronounceableMass =
   , "źn", "rż", "zcz", "zj", "db", "zp"
   , "zsz", "dn", "zż", "rzm", "źdz", "gb"
   , "mz", "nf", "chn", "gh", "łt", "jt"
-  , "kd", "gd", "źl", "df", "jl"
+  , "kd", "gd", "źl", "df", "jl", "tz"
   , "dzl", "nm", "hl", "tf", "kcz", "rś"
   , "łl", "pn", "śk", "wl", "rl", "ncz"
   , "szn", "łdz", "pk", "ćm", "ść", "ćc"
-  , "jż", "żn", "zw", "wski", "wska"
-  , "ński", "jski", "lski", "łm", "kb"
+  , "jż", "żn", "zw", "wski", "wska", "hd"
+  , "ński", "jski", "lski", "łm", "kb", "pb"
   , "jm", "rski", "ńska", "jska", "lska", "rska"
-  , "mski", "mska"
+  , "mski", "mska", "msko", "bsz", "ccia", "ssia", "ccie"
+  , "cciu", "ccio", "ssie", "ssio", "ssiu", "ssię", "ssi"
+  , "ccię", "ssią", "ccią", "wni", "wnio", "wnia", "cci"
+  , "wnie", "wnię", "wnią", "wniu", "rci", "rcio"
+  , "rcie", "rciu", "rcię", "rcią", "rcia", "rdzi", "rció"
+  , "rdzia", "rdzie", "rdziu", "rdzio", "rdzią", "rdzię"
+  , "hdzia", "hdzie", "hdziu", "hdzio", "hdzią", "hdzię"
+  , "chdzia", "chdzie", "chdziu", "chdzio", "chdzią", "chdzię"
+  , "ndzi", "ndzia", "ndzie", "ndziu", "ndzią", "ndzio"
+  , "ndzię", "nci", "ncio", "ncia", "nciu", "ncie", "ncią", "nció"
+  , "ncię", "ksie", "ksi", "ksio", "ksia", "ksiu", "księ"
+  , "ksią", "rgia", "rgie", "rgio", "rgiu", "rgią", "rgię"
+  , "pni", "pnia", "pnio", "pniu", "pnie", "pnią", "pnię"
+  , "nski", "nska", "nsko", "nnia", "nnie", "nnio", "nniu"
+  , "nnią", "nnię", "nni", "dski", "dsko", "dska", "dską", "dsku"
+  , "dskę", "rni", "rnia", "rnie", "rnio", "rniu", "rnię"
+  , "rnią", "lnie", "lnia", "lnią", "lniu", "lnię", "lnio", "lni"
+  , "tnie", "tnia", "tnią", "tniu", "tnię", "tnio", "tni"
+  , "tsie", "tsia", "tsią", "tsiu", "tsię", "tsio", "tsi"
+  , "nsie", "nsia", "nsią", "nsiu", "nsię", "nsio", "nsi"
+  , "chni", "chnia", "chnie", "chnio", "chniu", "chnię"
+  , "dni", "dnia", "dnie", "dnio", "dniu", "dnię"
+  , "żni", "żnia", "żnie", "żnio", "żniu", "żnię"
+  , "kci", "kcio", "kcia", "kciu", "kcie", "kcią", "kcię", "kció"
+  , "gci", "gcio", "gcia", "gciu", "gcie", "gcią", "gcię", "gció"
+  , "jni", "jnio", "jnia", "jniu", "jnie", "jnią", "jnię", "jnió"
+  , "źni", "źnio", "źnia", "źniu", "źnie", "źnią", "źnię", "źnió"
+  , "łni", "łnio", "łnia", "łniu", "łnie", "łnią", "łnię", "łnió"
+  , "czni", "cznio", "cznia", "czniu", "cznie", "cznią", "cznię", "cznió"
+  , "żc", "pcz", "rj", "łd", "tsz", "ćs", "bski", "bsko", "bska", "bsku"
+  , "pcie", "pciu", "pcię", "pcią", "pcia", "pci", "pció", "pcio"
   ]
 
 unpronounceablePhones : Phone -> Phone -> Bool
@@ -68,24 +107,28 @@ unpronounceablePhones p1 p2 =
   case (p1, p2) of
     (Consonant c1, Consonant c2) ->
       let (c1', c2') = (String.toLower c1, String.toLower c2)
-      in List.member c1' ["ń"]
-         || List.member c2' ["ń"]
+      in String.startsWith "ń" c1'
+         || String.startsWith "ń" c2'
          || Set.member (c1' ++ c2') unpronounceableMass
     (Consonant c1, Vowel c2) ->
       let (c1', c2') = (String.toLower c1, String.toLower c2)
-      in List.member c1' ["ń"]
-         || List.member c2' ["ń"]
+      in String.startsWith "ń" c1'
+         || String.startsWith "ń" c2'
          || Set.member (c1' ++ c2') unpronounceableMass
     (Vowel c1, Consonant c2) ->
       let (c1', c2') = (String.toLower c1, String.toLower c2)
-      in List.member c1' ["ń"]
-         || List.member c2' ["ń"]
+      in String.startsWith "ń" c1'
+         || String.startsWith "ń" c2'
          || Set.member (c1' ++ c2') unpronounceableMass
     _ -> False
 
+vowels : Set.Set String
+vowels =
+  Set.fromList ["a", "ą", "e", "ę", "i", "o", "u", "ó", "y"]
+
 isVowel : Char -> Bool
 isVowel s =
-  List.member (String.toLower <| String.fromChar s) ["a", "ą", "e", "ę", "i", "o", "u", "ó", "y"]
+  Set.member (String.toLower <| String.fromChar s) vowels
 
 phonesToString : List Phone -> String
 phonesToString phs =
@@ -109,7 +152,19 @@ phones word =
 
 indivisibleVowelsMass : Set.Set String
 indivisibleVowelsMass =
-  Set.fromList ["au", "eu", "ia", "ią", "ie", "ię", "io", "iu", "ió", "ue", "ay", "ski", "ska", "ipół", "dzia", "dzie", "dzią", "dzię", "dzi"]
+  Set.fromList
+    [ "au", "eu", "ia", "ią", "ie", "ię", "io"
+    , "iu", "ió", "ue", "ay", "ski", "ska", "sko"
+    , "dzia", "dzie", "dzią", "dzię", "dziu", "dzio"
+    , "dza", "dze", "dzu", "dzy", "dzo", "cie", "cia"
+    , "ciu", "cię", "cią", "cio", "ci", "sie", "sia"
+    , "siu", "się", "sią", "sio", "si", "nie", "nia"
+    , "niu", "nię", "nią", "nio", "ni", "zie", "zia"
+    , "ziu", "zię", "zią", "zio", "zi", "gie", "gia"
+    , "gią", "gię", "giu", "gio", "rie", "ria", "riu"
+    , "rię", "rią", "rio", "oy", "ció", "sió", "nió"
+    , "rió"
+    ]
 
 indivisibleVowels : List Phone -> Bool
 indivisibleVowels phs =
@@ -152,7 +207,7 @@ mapIndivisibles phs =
                    two2   = List.take 2 <| List.drop 1 prev
                    two3   = List.drop 2 prev
                in if indivisibleVowels prev || indivisibleConsonants prev
-                  then mergePhones prev :: rest
+                  then (mergePhones prev) :: rest
                   else if indivisibleVowels three1 || indivisibleConsonants three1
                           then (List.drop 2 prev) ++ (mergePhones three1 :: rest)
                           else if indivisibleVowels three2 || indivisibleConsonants three2
@@ -174,13 +229,13 @@ mapIndivisibles phs =
           let two = List.take 2 prev
               three = List.take 3 prev
               four = prev ++ [ph]
-          in if indivisibleVowels two || indivisibleConsonants two
-            then (List.drop 2 prev ++ [ph], mergePhones two :: acc)
-            else if indivisibleVowels three || indivisibleConsonants three
-                    then (List.drop 3 prev ++ [ph], mergePhones three :: acc)
-                    else if indivisibleVowels four || indivisibleConsonants four
-                            then (List.drop 4 prev ++ [ph], mergePhones four :: acc)
-                            else (List.drop 1 prev ++ [ph], List.take 1 prev ++ acc)
+          in if indivisibleVowels four || indivisibleConsonants four
+              then (List.drop 4 four, mergePhones four :: acc)
+              else if indivisibleVowels three || indivisibleConsonants three
+                    then (List.drop 3 four, mergePhones three :: acc)
+                    else if indivisibleVowels two || indivisibleConsonants two
+                          then (List.drop 2 four, mergePhones two :: acc)
+                          else (List.drop 1 four, List.take 1 prev ++ acc)
 
         else (prev ++ [ph], acc)) 
     ([], [])
@@ -234,7 +289,10 @@ separate f phs =
           Nothing ->
             if stop
                then (Nothing, toprev, p :: tonew, True)
-               else (Just p, toprev, tonew, False))
+               else case p of 
+                 Vowel _ -> (Nothing, toprev, p :: tonew, True)
+                 _ -> (Just p, toprev, tonew, False))
+               
       (Nothing, [], [], False)
       phs
 
@@ -268,23 +326,52 @@ divideConsonants sylls =
       (Nothing, [])
       sylls
 
-{-
 mergeLonelyVowels : List (List Phone) -> List (List Phone)
 mergeLonelyVowels sylls =
-  (\(rest, acc) -> List.take 1 sylls ++ if List.isEmpty rest then acc else rest :: acc)
-  <| List.foldr
-      (\p (next,acc) -> case (List.take 1 <| List.reverse p, next) of
-        ([Vowel _], [Vowel _]) -> ([], (p ++ next) :: acc)
-        (_, []) -> (p, acc)
-        _ -> (p, next :: acc))
-      ([], [])
-      (List.drop 1 sylls)
--}
+  case List.head sylls of
+    Just fstSyll ->
+      fstSyll ::
+      (List.reverse <| snd <| List.foldl
+         (\mthree (merged, acc) ->
+           case mthree of
+             [] -> (False, acc)
+             [p1] -> (False, acc)
+             [p1,p2] -> if merged
+                          then (False, acc)
+                          else (False, p2 :: acc)
+             [p1,[Vowel v2],[Vowel v3]] ->
+               (False, [Vowel v2] :: acc)
+             [[Vowel v1],[Vowel v2],p3] ->
+               (False, [Vowel v2] :: acc)
+             [p1,[Vowel v2],p3] ->
+               if String.any (\c -> not <| Set.member (String.fromChar c) vowels) v2
+                 then (False, [Vowel v2] :: acc)
+                 else case List.last p1 of
+                   Just (Vowel v1) ->  (True, (Vowel v2 :: p3) :: acc)
+                   _ -> (False, [Vowel v2] :: acc)
+             [p1,p2,p3] -> if merged
+                            then (False, acc)
+                            else (False, p2 :: acc)
+             _ -> (False, acc))
+       (False, [])
+       <| List.greedyGroupsOfWithStep 3 1 sylls)
+    Nothing -> sylls
+
+mergeLonelyConsonants : List (List Phone) -> List (List Phone)
+mergeLonelyConsonants sylls =
+  let len = List.length sylls
+  in if len > 1
+      then let (i,r) = List.splitAt (len - 2) sylls
+           in if List.all phoneIsC <| List.concat <| List.drop 1 r
+               then i ++ [List.concat r]
+               else sylls
+      else sylls
 
 syllabize : String -> List String
 syllabize word =
   List.map phonesToString
---  <| mergeLonelyVowels
+  <| mergeLonelyConsonants
+  <| mergeLonelyVowels
   <| divideConsonants
   <| divideByVowel
   <| filterHyphens

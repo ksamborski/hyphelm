@@ -15,18 +15,20 @@ echo -n "  [" >> ../test/TestData.elm
 
 first=1
 while read line ; do
-  if [ "$first" == "1" ] ; then
-    echo "$line" | sed 's/\("[^"]\+"\):\s*\(\[[^]]\+\]\),\?/(\1,\2),/g' \
-                 | sed 's/^.\(.*\)..$/\1/' \
-                 | sed 's/,(/\n  , (/g' \
-                 | sed 's/^(/ (/g' \
-                 >> ../test/TestData.elm
-  else
-    echo "$line" | sed 's/\("[^"]\+"\):\s*\(\[[^]]\+\]\),\?/(\1,\2),/g' \
-                 | sed 's/^.\(.*\)..$/,\1/' \
-                 | sed 's/,(/\n  , (/g' \
-                 | sed 's/^(/    (/g' \
-                 >> ../test/TestData.elm
+  if [ "$line" != "{}" ] ; then
+    if [ "$first" == "1" ] ; then
+      echo "$line" | sed 's/\("[^"]\+"\):\s*\(\[[^]]\+\]\),\?/(\1,\2),/g' \
+                   | sed 's/^.\(.*\)..$/\1/' \
+                   | sed 's/,(/\n  , (/g' \
+                   | sed 's/^(/ (/g' \
+                   >> ../test/TestData.elm
+    else
+      echo "$line" | sed 's/\("[^"]\+"\):\s*\(\[[^]]\+\]\),\?/(\1,\2),/g' \
+                   | sed 's/^.\(.*\)..$/,\1/' \
+                   | sed 's/,(/\n  , (/g' \
+                   | sed 's/^(/    (/g' \
+                   >> ../test/TestData.elm
+    fi
   fi
 
   first=0
